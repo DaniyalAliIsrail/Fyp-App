@@ -8,39 +8,63 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from "react-native";
 import styles from "../../styles/Signup.styles";
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../../constants/colors";
 import { useState } from "react";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import SafeScreen from "../../components/SafeScreen";
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { auth } from "../../Repositories/auth";
+import { useDispatch, useSelector } from "react-redux";
+import { signUpUser } from "../../store/slices/auth.slice";
 
 export default function Signup() {
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { loading, error } = useSelector((state) => state.auth);
+
   const [formData, setFormData] = useState({
-    name: "",
-    lastName: "",
+    firstname: "",
+    lastname: "",
     email: "",
     password: "",
-    cnicNo: "",
-    dob: "",
+    cnic_no: "",
+    date_of_birth: "",
     gender: "",
     phone: "",
-    profileImage: null,
-    cnicFront: "",
-    cnicBack: "",
+    profile_image: null,
+    cnic_front: null,
+    cnic_back: null,
   });
   const [showDOBPicker, setShowDOBPicker] = useState(false);
   const [dobDate, setDobDate] = useState(formData.dob ? new Date(formData.dob) : new Date());
-  console.log("formData==>", formData);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (key, value) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
+    let newValue = value;
+
+    // Format CNIC number with dashes (12345-1234567-1)
+    if (key === "cnic_no") {
+      let digits = newValue.replace(/\D/g, "").slice(0, 13);
+
+      if (digits.length > 5 && digits.length <= 12) {
+        newValue = digits.slice(0, 5) + "-" + digits.slice(5, 12);
+      } else if (digits.length === 13) {
+        newValue =
+          digits.slice(0, 5) +
+          "-" +
+          digits.slice(5, 12) +
+          "-" +
+          digits.slice(12);
+      } else {
+        newValue = digits;
+      }
+    }
+
+    setFormData((prev) => ({ ...prev, [key]: newValue }));
   };
 
   const pickImage = async () => {
@@ -56,57 +80,90 @@ export default function Signup() {
       quality: 1,
     });
     if (!result.canceled) {
-      handleChange("profileImage", result.assets[0].uri);
+      handleChange("profile_image", result.assets[0].uri);
     }
   };
   
- const handleSignup = async () => {
-    setIsLoading(true);
-
+  const handleSignup = async () => {
     try {
+      // Log form state before creating FormData
+      console.log("=== SIGNUP PAYLOAD ===");
+      console.log("Form Data State:", JSON.stringify(formData, null, 2));
+
       const data = new FormData();
 
       // TEXT FIELDS
-      data.append("firstname", formData.name);
-      data.append("lastname", formData.lastName);
+      data.append("firstname", formData.firstname);
+      data.append("lastname", formData.lastname);
       data.append("email", formData.email);
       data.append("password", formData.password);
-      data.append("cnic_no", formData.cnicNo);
-      data.append("date_of_birth", formData.dob);
+      data.append("cnic_no", formData.cnic_no);
+      data.append("date_of_birth", formData.date_of_birth);
       data.append("gender", formData.gender);
       data.append("phone", formData.phone);
 
+      // Log text fields being sent
+      console.log("Text Fields:", {
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        email: formData.email,
+        password: "****", // Hidden for security
+        cnic_no: formData.cnic_no,
+        date_of_birth: formData.date_of_birth,
+        gender: formData.gender,
+        phone: formData.phone,
+      });
+
       // FILE FIELDS
-      if (formData.profileImage) {
+      console.log("File Fields:");
+      if (formData.profile_image) {
+        console.log("  - profile_image:", formData.profile_image);
         data.append("profile_image", {
-          uri: formData.profileImage,
+          uri: formData.profile_image,
           name: "profile.jpg",
           type: "image/jpeg",
         });
+      } else {
+        console.log("  - profile_image: Not provided");
       }
-      if (formData.cnicFront) {
+      if (formData.cnic_front) {
+        console.log("  - cnic_front:", formData.cnic_front);
         data.append("cnic_front", {
-          uri: formData.cnicFront,
+          uri: formData.cnic_front,
           name: "cnic_front.jpg",
           type: "image/jpeg",
         });
+      } else {
+        console.log("  - cnic_front: Not provided");
       }
-      if (formData.cnicBack) {
+      if (formData.cnic_back) {
+        console.log("  - cnic_back:", formData.cnic_back);
         data.append("cnic_back", {
-          uri: formData.cnicBack,
+          uri: formData.cnic_back,
           name: "cnic_back.jpg",
           type: "image/jpeg",
         });
+      } else {
+        console.log("  - cnic_back: Not provided");
       }
 
-      const res = await auth.signUp(data);
-      console.log("Signup Success:", res.data);
+      console.log("=== SENDING TO API ===222222");
+
+      // Dispatch signup action to Redux
+      const result = await dispatch(signUpUser(data)).unwrap();
+      console.log("=== SIGNUP SUCCESS ===");
+      console.log("Response:", JSON.stringify(result, null, 2));
+
+      // Show success and navigate to login
+      Alert.alert("Success", "Registration successful!", [
+        { text: "OK", onPress: () => router.replace("/(auth)") }
+      ]);
 
     } catch (error) {
-      console.log("Signup Error:", error);
+      console.log("=== SIGNUP ERROR ===");
+      console.log("Error:", error);
+      Alert.alert("Error", error || "Signup failed");
     }
-
-    setTimeout(() => setIsLoading(false), 1000);
   };
 
 
@@ -133,9 +190,9 @@ export default function Signup() {
                     style={styles.imagePickerContainer}
                     onPress={pickImage}
                   >
-                    {formData.profileImage ? (
+                    {formData.profile_image ? (
                       <Image
-                        source={{ uri: formData.profileImage }}
+                        source={{ uri: formData.profile_image }}
                         style={styles.profileImage}
                       />
                     ) : (
@@ -148,15 +205,15 @@ export default function Signup() {
                     )}
                   </TouchableOpacity>
                   <Text style={styles.imagePickerText}>
-                    {formData.profileImage
+                    {formData.profile_image
                       ? "Tap to change image"
                       : "Tap to upload image"}
                   </Text>
                 </View>
 
-                {/* Name */}
+                {/* First Name */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Name</Text>
+                  <Text style={styles.label}>First Name</Text>
                   <View style={styles.inputContainer}>
                     <Ionicons
                       name="person-outline"
@@ -166,10 +223,10 @@ export default function Signup() {
                     />
                     <TextInput
                       style={styles.input}
-                      placeholder="Enter Your Name"
+                      placeholder="Enter Your First Name"
                       placeholderTextColor={COLORS.placeholderText}
-                      value={formData.name}
-                      onChangeText={(value) => handleChange("name", value)}
+                      value={formData.firstname}
+                      onChangeText={(value) => handleChange("firstname", value)}
                     />
                   </View>
                 </View>
@@ -188,8 +245,8 @@ export default function Signup() {
                       style={styles.input}
                       placeholder="Enter Your Last Name"
                       placeholderTextColor={COLORS.placeholderText}
-                      value={formData.lastName}
-                      onChangeText={(value) => handleChange("lastName", value)}
+                      value={formData.lastname}
+                      onChangeText={(value) => handleChange("lastname", value)}
                     />
                   </View>
                 </View>
@@ -252,8 +309,8 @@ export default function Signup() {
                       placeholder="Enter Your CNIC Number"
                       placeholderTextColor={COLORS.placeholderText}
                       keyboardType="numeric"
-                      value={formData.cnicNo}
-                      onChangeText={(value) => handleChange("cnicNo", value)}
+                      value={formData.cnic_no}
+                      onChangeText={(value) => handleChange("cnic_no", value)}
                     />
                   </View>
                 </View>
@@ -274,14 +331,14 @@ export default function Signup() {
                         style={[
                           styles.input,
                           {
-                            color: formData.dob
+                            color: formData.date_of_birth
                               ? "#000"
                               : COLORS.placeholderText,
                           },
                         ]}
                       >
-                        {formData.dob
-                          ? formData.dob
+                        {formData.date_of_birth
+                          ? formData.date_of_birth
                           : "Enter Your Date of Birth"}
                       </Text>
                     </View>
@@ -292,13 +349,13 @@ export default function Signup() {
                       value={dobDate}
                       mode="date"
                       display="default"
-                      maximumDate={new Date()} // DOB future date nahi ho sakta
+                      maximumDate={new Date()}
                       onChange={(event, selectedDate) => {
-                        setShowDOBPicker(Platform.OS === "ios"); // iOS pe picker open rakho
+                        setShowDOBPicker(Platform.OS === "ios");
                         if (selectedDate) {
                           setDobDate(selectedDate);
                           handleChange(
-                            "dob",
+                            "date_of_birth",
                             selectedDate.toISOString().split("T")[0]
                           ); // YYYY-MM-DD
                         }
@@ -376,13 +433,13 @@ export default function Signup() {
                         quality: 1,
                       });
                       if (!result.canceled) {
-                        handleChange("cnicFront", result.assets[0].uri);
+                        handleChange("cnic_front", result.assets[0].uri);
                       }
                     }}
                   >
-                    {formData.cnicFront ? (
+                    {formData.cnic_front ? (
                       <Image
-                        source={{ uri: formData.cnicFront }}
+                        source={{ uri: formData.cnic_front }}
                         style={styles.profileImage}
                       />
                     ) : (
@@ -395,7 +452,7 @@ export default function Signup() {
                     )}
                   </TouchableOpacity>
                   <Text style={styles.imagePickerText}>
-                    {formData.cnicFront
+                    {formData.cnic_front
                       ? "Tap to change image"
                       : "Tap to upload CNIC front"}
                   </Text>
@@ -422,13 +479,13 @@ export default function Signup() {
                         quality: 1,
                       });
                       if (!result.canceled) {
-                        handleChange("cnicBack", result.assets[0].uri);
+                        handleChange("cnic_back", result.assets[0].uri);
                       }
                     }}
                   >
-                    {formData.cnicBack ? (
+                    {formData.cnic_back ? (
                       <Image
-                        source={{ uri: formData.cnicBack }}
+                        source={{ uri: formData.cnic_back }}
                         style={styles.profileImage}
                       />
                     ) : (
@@ -441,7 +498,7 @@ export default function Signup() {
                     )}
                   </TouchableOpacity>
                   <Text style={styles.imagePickerText}>
-                    {formData.cnicBack
+                    {formData.cnic_back
                       ? "Tap to change image"
                       : "Tap to upload CNIC back"}
                   </Text>
@@ -450,9 +507,9 @@ export default function Signup() {
                 <TouchableOpacity
                   style={styles.button}
                   onPress={handleSignup}
-                  disabled={isLoading}
+                  disabled={loading}
                 >
-                  {isLoading ? (
+                  {loading ? (
                     <ActivityIndicator size="small" color={COLORS.white} />
                   ) : (
                     <Text style={styles.buttonText}>Sign Up</Text>
@@ -478,343 +535,3 @@ export default function Signup() {
     </SafeScreen>
   );
 }
-
-
-
-
-// import { Image } from "expo-image";
-// import {
-//   View,
-//   Text,
-//   TextInput,
-//   TouchableOpacity,
-//   ActivityIndicator,
-//   KeyboardAvoidingView,
-//   Platform,
-//   ScrollView,
-// } from "react-native";
-// import styles from "../../styles/Signup.styles";
-// import { Ionicons } from "@expo/vector-icons";
-// import COLORS from "../../constants/colors";
-// import { useState } from "react";
-// import { Link } from "expo-router";
-// import SafeScreen from "../../components/SafeScreen";
-// import { Picker } from "@react-native-picker/picker";
-// import * as ImagePicker from "expo-image-picker";
-// import DateTimePicker from "@react-native-community/datetimepicker";
-// import { auth } from "../../Repositories/auth";
-
-// export default function Signup() {
-//   const [formData, setFormData] = useState({
-//     name: "",
-//     lastName: "",
-//     email: "",
-//     password: "",
-//     cnicNo: "",
-//     dob: "",
-//     gender: "",
-//     phone: "",
-//     profileImage: null,
-//     cnicFront: null,
-//     cnicBack: null,
-//   });
-
-//   const [showDOBPicker, setShowDOBPicker] = useState(false);
-//   const [dobDate, setDobDate] = useState(new Date());
-//   const [isLoading, setIsLoading] = useState(false);
-
-//   const handleChange = (key, value) => {
-//     setFormData((prev) => ({ ...prev, [key]: value }));
-//   };
-
-//   // ---------------------
-//   // Image Picker Function
-//   // ---------------------
-//   const pickFile = async (field) => {
-//     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-//     if (status !== "granted") {
-//       alert("Permission to access media library is required!");
-//       return;
-//     }
-
-//     const result = await ImagePicker.launchImageLibraryAsync({
-//       mediaTypes: [ImagePicker.MediaType.image], // FIXED
-//       quality: 1,
-//     });
-
-//     if (!result.canceled) {
-//       handleChange(field, result.assets[0].uri);
-//     }
-//   };
-//   // ---------------------
-//   // Handle Signup Submit
-//   // ---------------------
-//   const handleSignup = async () => {
-//     setIsLoading(true);
-
-//     try {
-//       const data = new FormData();
-//       // Text Fields
-//       data.append("firstname", formData.name);
-//       data.append("lastname", formData.lastName);
-//       data.append("email", formData.email);
-//       data.append("password", formData.password);
-//       data.append("cnic_no", formData.cnicNo);
-//       data.append("date_of_birth", formData.dob);
-//       data.append("gender", formData.gender);
-//       data.append("phone", formData.phone);
-
-//       // File Fields
-//       const appendFile = (key, uri) => {
-//         if (uri) {
-//           data.append(key, {
-//             uri,
-//             name: `${key}.jpg`,
-//             type: "image/jpeg",
-//           });
-//         }
-//       };
-      
-//       appendFile("profile_image", formData.profileImage);
-//       appendFile("cnic_front", formData.cnicFront);
-//       appendFile("cnic_back", formData.cnicBack);
-
-//       const res = await auth.signUp(data);
-//       console.log("✔ Signup Success:", res.data);
-
-//     } catch (error) {
-//       console.log("❌ Signup Error:", error);
-//     }
-//     setIsLoading(false);
-//   };
-
-//   return (
-//     <SafeScreen>
-//       <KeyboardAvoidingView
-//         style={{ flex: 1 }}
-//         behavior={Platform.OS === "ios" ? "padding" : "height"}
-//       >
-//         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-//           <View style={styles.container}>
-//             <View style={styles.card}>
-
-//               {/* Header */}
-//               <View style={styles.header}>
-//                 <Text style={styles.title}>Crime Report 🧾</Text>
-//                 <Text style={styles.subtitle}>Register Yourself</Text>
-//               </View>
-
-//               <View style={styles.formContainer}>
-
-//                 {/* ---------------- PROFILE IMAGE ---------------- */}
-//                 <View style={styles.inputGroup}>
-//                   <Text style={styles.label}>Profile Image</Text>
-//                   <TouchableOpacity
-//                     style={styles.imagePickerContainer}
-//                     onPress={() => pickFile("profileImage")}
-//                   >
-//                     {formData.profileImage ? (
-//                       <Image
-//                         source={{ uri: formData.profileImage }}
-//                         style={styles.profileImage}
-//                       />
-//                     ) : (
-//                       <Ionicons
-//                         name="camera-outline"
-//                         size={40}
-//                         color={COLORS.placeholderText}
-//                       />
-//                     )}
-//                   </TouchableOpacity>
-//                 </View>
-
-//                 {/* ---------------- CNIC FRONT ---------------- */}
-//                 <View style={styles.inputGroup}>
-//                   <Text style={styles.label}>CNIC Front</Text>
-//                   <TouchableOpacity
-//                     style={styles.imagePickerContainer}
-//                     onPress={() => pickFile("cnicFront")}
-//                   >
-//                     {formData.cnicFront ? (
-//                       <Image
-//                         source={{ uri: formData.cnicFront }}
-//                         style={styles.profileImage}
-//                       />
-//                     ) : (
-//                       <Ionicons
-//                         name="id-card-outline"
-//                         size={40}
-//                         color={COLORS.placeholderText}
-//                       />
-//                     )}
-//                   </TouchableOpacity>
-//                 </View>
-
-//                 {/* ---------------- CNIC BACK ---------------- */}
-//                 <View style={styles.inputGroup}>
-//                   <Text style={styles.label}>CNIC Back</Text>
-//                   <TouchableOpacity
-//                     style={styles.imagePickerContainer}
-//                     onPress={() => pickFile("cnicBack")}
-//                   >
-//                     {formData.cnicBack ? (
-//                       <Image
-//                         source={{ uri: formData.cnicBack }}
-//                         style={styles.profileImage}
-//                       />
-//                     ) : (
-//                       <Ionicons
-//                         name="id-card-outline"
-//                         size={40}
-//                         color={COLORS.placeholderText}
-//                       />
-//                     )}
-//                   </TouchableOpacity>
-//                 </View>
-
-//                 {/* ---------------- NAME ---------------- */}
-//                 <View style={styles.inputGroup}>
-//                   <Text style={styles.label}>First Name</Text>
-//                   <TextInput
-//                     style={styles.input}
-//                     value={formData.name}
-//                     onChangeText={(v) => handleChange("name", v)}
-//                     placeholder="Enter First Name"
-//                   />
-//                 </View>
-
-//                 {/* ---------------- LAST NAME ---------------- */}
-//                 <View style={styles.inputGroup}>
-//                   <Text style={styles.label}>Last Name</Text>
-//                   <TextInput
-//                     style={styles.input}
-//                     value={formData.lastName}
-//                     onChangeText={(v) => handleChange("lastName", v)}
-//                     placeholder="Enter Last Name"
-//                   />
-//                 </View>
-
-//                 {/* ---------------- EMAIL ---------------- */}
-//                 <View style={styles.inputGroup}>
-//                   <Text style={styles.label}>Email</Text>
-//                   <TextInput
-//                     style={styles.input}
-//                     value={formData.email}
-//                     keyboardType="email-address"
-//                     onChangeText={(v) => handleChange("email", v)}
-//                     placeholder="Enter Email"
-//                   />
-//                 </View>
-
-//                 {/* ---------------- PASSWORD ---------------- */}
-//                 <View style={styles.inputGroup}>
-//                   <Text style={styles.label}>Password</Text>
-//                   <TextInput
-//                     style={styles.input}
-//                     value={formData.password}
-//                     secureTextEntry
-//                     onChangeText={(v) => handleChange("password", v)}
-//                     placeholder="Enter Password"
-//                   />
-//                 </View>
-
-//                 {/* ---------------- CNIC NO ---------------- */}
-//                 <View style={styles.inputGroup}>
-//                   <Text style={styles.label}>CNIC No</Text>
-//                   <TextInput
-//                     style={styles.input}
-//                     value={formData.cnicNo}
-//                     keyboardType="numeric"
-//                     onChangeText={(v) => handleChange("cnicNo", v)}
-//                     placeholder="Enter CNIC Number"
-//                   />
-//                 </View>
-
-//                 {/* ---------------- PHONE ---------------- */}
-//                 <View style={styles.inputGroup}>
-//                   <Text style={styles.label}>Phone</Text>
-//                   <TextInput
-//                     style={styles.input}
-//                     value={formData.phone}
-//                     keyboardType="phone-pad"
-//                     onChangeText={(v) => handleChange("phone", v)}
-//                     placeholder="Enter Phone Number"
-//                   />
-//                 </View>
-
-//                 {/* ---------------- GENDER PICKER ---------------- */}
-//                 <View style={styles.inputGroup}>
-//                   <Text style={styles.label}>Gender</Text>
-//                   <Picker
-//                     selectedValue={formData.gender}
-//                     onValueChange={(v) => handleChange("gender", v)}
-//                     style={styles.picker}
-//                   >
-//                     <Picker.Item label="Select Gender" value="" />
-//                     <Picker.Item label="Male" value="male" />
-//                     <Picker.Item label="Female" value="female" />
-//                   </Picker>
-//                 </View>
-
-//                 {/* ---------------- DOB PICKER ---------------- */}
-//                 <View style={styles.inputGroup}>
-//                   <Text style={styles.label}>Date of Birth</Text>
-
-//                   <TouchableOpacity
-//                     style={styles.input}
-//                     onPress={() => setShowDOBPicker(true)}
-//                   >
-//                     <Text>
-//                       {formData.dob ? formData.dob : "Select Date of Birth"}
-//                     </Text>
-//                   </TouchableOpacity>
-
-//                   {showDOBPicker && (
-//                     <DateTimePicker
-//                       value={dobDate}
-//                       mode="date"
-//                       display="spinner"
-//                       onChange={(event, selectedDate) => {
-//                         setShowDOBPicker(false);
-//                         if (selectedDate) {
-//                           const formatted =
-//                             selectedDate.toISOString().split("T")[0];
-//                           handleChange("dob", formatted);
-//                           setDobDate(selectedDate);
-//                         }
-//                       }}
-//                     />
-//                   )}
-//                 </View>
-
-//                 {/* ---------------- BUTTON ---------------- */}
-//                 <TouchableOpacity
-//                   style={styles.button}
-//                   onPress={handleSignup}
-//                   disabled={isLoading}
-//                 >
-//                   {isLoading ? (
-//                     <ActivityIndicator size="small" color={COLORS.white} />
-//                   ) : (
-//                     <Text style={styles.buttonText}>Sign Up</Text>
-//                   )}
-//                 </TouchableOpacity>
-
-//                 {/* ---------------- FOOTER ---------------- */}
-//                 <View style={styles.footer}>
-//                   <Text style={styles.footerText}>Already have an account?</Text>
-//                   <Link href="/(auth)" asChild>
-//                     <TouchableOpacity>
-//                       <Text style={styles.link}>Sign In</Text>
-//                     </TouchableOpacity>
-//                   </Link>
-//                 </View>
-
-//               </View>
-//             </View>
-//           </View>
-//         </ScrollView>
-//       </KeyboardAvoidingView>
-//     </SafeScreen>
-//   );
-// }
