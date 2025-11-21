@@ -64,6 +64,12 @@ export default function Signup() {
       }
     }
 
+    // Limit phone number to 11 digits
+    if (key === "phone") {
+      let digits = newValue.replace(/\D/g, ""); // Remove non-digits
+      newValue = digits.slice(0, 11); // Limit to 11 digits
+    }
+
     setFormData((prev) => ({ ...prev, [key]: newValue }));
   };
 
@@ -86,6 +92,57 @@ export default function Signup() {
   
   const handleSignup = async () => {
     try {
+      // Validate required fields
+      if (!formData.firstname || !formData.lastname || !formData.email ||
+          !formData.password || !formData.cnic_no || !formData.date_of_birth ||
+          !formData.gender || !formData.phone) {
+        Alert.alert("Error", "Please fill in all required fields");
+        return;
+      }
+
+      // Validate required images
+      if (!formData.profile_image) {
+        Alert.alert("Error", "Profile image is required");
+        return;
+      }
+
+      if (!formData.cnic_front) {
+        Alert.alert("Error", "CNIC front image is required");
+        return;
+      }
+
+      if (!formData.cnic_back) {
+        Alert.alert("Error", "CNIC back image is required");
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        Alert.alert("Error", "Please enter a valid email address");
+        return;
+      }
+
+      // Validate CNIC format (should be 13 digits with dashes: 12345-1234567-1)
+      const cnicRegex = /^\d{5}-\d{7}-\d{1}$/;
+      if (!cnicRegex.test(formData.cnic_no)) {
+        Alert.alert("Error", "CNIC must be in format: 12345-1234567-1");
+        return;
+      }
+
+      // Validate phone number (basic validation - must be digits and reasonable length)
+      const phoneDigits = formData.phone.replace(/\D/g, "");
+      if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+        Alert.alert("Error", "Please enter a valid phone number");
+        return;
+      }
+
+      // Validate password length
+      if (formData.password.length < 6) {
+        Alert.alert("Error", "Password must be at least 6 characters long");
+        return;
+      }
+
       // Log form state before creating FormData
       console.log("=== SIGNUP PAYLOAD ===");
       console.log("Form Data State:", JSON.stringify(formData, null, 2));
@@ -154,10 +211,23 @@ export default function Signup() {
       console.log("=== SIGNUP SUCCESS ===");
       console.log("Response:", JSON.stringify(result, null, 2));
 
-      // Show success and navigate to login
-      Alert.alert("Success", "Registration successful!", [
-        { text: "OK", onPress: () => router.replace("/(auth)") }
-      ]);
+      // Extract user_id from response
+      const user_id = result.data?.user?.id || result.user?.id || result.data?.id;
+
+      // Show success and navigate to OTP verification
+      Alert.alert(
+        "Success",
+        "Registration successful! Please check your email for OTP verification code.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.replace({
+              pathname: "/(tabs)/verify-otp",
+              params: { user_id: user_id }
+            })
+          }
+        ]
+      );
 
     } catch (error) {
       console.log("=== SIGNUP ERROR ===");
@@ -185,7 +255,9 @@ export default function Signup() {
               <View style={styles.formContainer}>
                 {/* Profile Image */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Profile Image</Text>
+                  <Text style={styles.label}>
+                    Profile Image <Text style={{ color: 'red' }}>*</Text>
+                  </Text>
                   <TouchableOpacity
                     style={styles.imagePickerContainer}
                     onPress={pickImage}
@@ -207,7 +279,7 @@ export default function Signup() {
                   <Text style={styles.imagePickerText}>
                     {formData.profile_image
                       ? "Tap to change image"
-                      : "Tap to upload image"}
+                      : "Tap to upload image (Required)"}
                   </Text>
                 </View>
 
@@ -414,7 +486,9 @@ export default function Signup() {
 
                 {/* CNIC Front */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>CNIC Front</Text>
+                  <Text style={styles.label}>
+                    CNIC Front <Text style={{ color: 'red' }}>*</Text>
+                  </Text>
                   <TouchableOpacity
                     style={styles.imagePickerContainer}
                     onPress={async () => {
@@ -454,13 +528,15 @@ export default function Signup() {
                   <Text style={styles.imagePickerText}>
                     {formData.cnic_front
                       ? "Tap to change image"
-                      : "Tap to upload CNIC front"}
+                      : "Tap to upload CNIC front (Required)"}
                   </Text>
                 </View>
 
                 {/* CNIC Back */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>CNIC Back</Text>
+                  <Text style={styles.label}>
+                    CNIC Back <Text style={{ color: 'red' }}>*</Text>
+                  </Text>
                   <TouchableOpacity
                     style={styles.imagePickerContainer}
                     onPress={async () => {
@@ -500,7 +576,7 @@ export default function Signup() {
                   <Text style={styles.imagePickerText}>
                     {formData.cnic_back
                       ? "Tap to change image"
-                      : "Tap to upload CNIC back"}
+                      : "Tap to upload CNIC back (Required)"}
                   </Text>
                 </View>
 
@@ -521,7 +597,7 @@ export default function Signup() {
                   <Text style={styles.footerText}>
                     Already have an account?
                   </Text>
-                  <Link href="/(auth)" asChild>
+                  <Link href="/(tabs)/login" asChild>
                     <TouchableOpacity>
                       <Text style={styles.link}>Sign In</Text>
                     </TouchableOpacity>

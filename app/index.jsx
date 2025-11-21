@@ -1,22 +1,13 @@
-import { StyleSheet, Text, View } from "react-native";
-import {Link} from "expo-router";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
 
 export default function Index() {
-  return (
-    <View style={styles.container}>
-      <Link href="/(auth)/signup">Signup</Link>
-      <Link href="/(auth)">Login</Link>
-    </View>
-  );
-}
+  const router = useRouter();
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
-    color: "blue",
-  },
-});
+  // Always redirect to tabs
+  useEffect(() => {
+    router.replace("/(tabs)");
+  }, []);
+
+  return null;
+}

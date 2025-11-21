@@ -7,21 +7,72 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import styles from "../../styles/login.styles";
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../../constants/colors";
-import { useState } from "react";
-import { Link } from "expo-router";
+import { useState, useEffect } from "react";
+import { Link, useRouter } from "expo-router";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../../store/slices/auth.slice";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [Password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const { loading, error, currentUser } = useSelector((state) => state.auth);
 
-  const handleLogin = () => {
-    return;
+  const [cnic_no, setCnicNo] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Navigate to home if user is logged in
+  useEffect(() => {
+    if (currentUser) {
+      router.replace("/(tabs)");
+    }
+  }, [currentUser]);
+
+  // Handle CNIC input with auto-formatting
+  const handleCnicChange = (value) => {
+    let digits = value.replace(/\D/g, "").slice(0, 13);
+
+    if (digits.length > 5 && digits.length <= 12) {
+      value = digits.slice(0, 5) + "-" + digits.slice(5, 12);
+    } else if (digits.length === 13) {
+      value =
+        digits.slice(0, 5) +
+        "-" +
+        digits.slice(5, 12) +
+        "-" +
+        digits.slice(12);
+    } else {
+      value = digits;
+    }
+
+    setCnicNo(value);
+  };
+
+  const handleLogin = async () => {
+    // Validate inputs
+    if (!cnic_no || !password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    try {
+      const result = await dispatch(loginUser({ cnic_no, password })).unwrap();
+      console.log("=== LOGIN SUCCESS ===");
+      console.log("Response:", JSON.stringify(result, null, 2));
+
+      Alert.alert("Success", "Login successful!", [
+        { text: "OK", onPress: () => router.replace("/(tabs)") }
+      ]);
+    } catch (error) {
+      console.log("=== LOGIN ERROR ===");
+      console.log("Error:", error);
+      Alert.alert("Error", error || "Login failed");
+    }
   };
   return (
     <KeyboardAvoidingView
@@ -40,22 +91,22 @@ export default function Login() {
         <View style={styles.card}>
           <View style={styles.formContainer}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>CNIC No</Text>
               <View style={styles.inputContainer}>
                 <Ionicons
-                  name="mail-outline"
+                  name="card-outline"
                   size={20}
                   color={COLORS.primary}
                   style={styles.inputIcon}
                 />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter Your email"
+                  placeholder="Enter Your CNIC Number"
                   placeholderTextColor={COLORS.placeholderText}
-                  keyboardType="email-address"
+                  keyboardType="numeric"
                   autoCapitalize="none"
-                  value={email}
-                  onChangeText={setEmail}
+                  value={cnic_no}
+                  onChangeText={handleCnicChange}
                 />
               </View>
             </View>
@@ -75,7 +126,7 @@ export default function Login() {
                   placeholder="Enter Your Password"
                   placeholderTextColor={COLORS.placeholderText}
                   autoCapitalize="none"
-                  value={Password}
+                  value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                 />
@@ -91,10 +142,10 @@ export default function Login() {
             </View>
             <TouchableOpacity
               style={styles.button}
-              onPress={() => handleLogin}
-              disabled={isLoading}
+              onPress={handleLogin}
+              disabled={loading}
             >
-              {isLoading ? (
+              {loading ? (
                 <ActivityIndicator size="small" color={COLORS.white} />
               ) : (
                 <Text style={styles.buttonText}>Login</Text>
@@ -104,7 +155,7 @@ export default function Login() {
             {/* Footer */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don't have an account?</Text>
-              <Link href="/signup" asChild>
+              <Link href="/(tabs)/signup" asChild>
                 <TouchableOpacity>
                   <Text style={styles.link}>Sign Up</Text>
                 </TouchableOpacity>
