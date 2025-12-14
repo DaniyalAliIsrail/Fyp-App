@@ -42,6 +42,7 @@ export default function Signup() {
   });
   const [showDOBPicker, setShowDOBPicker] = useState(false);
   const [dobDate, setDobDate] = useState(formData.dob ? new Date(formData.dob) : new Date());
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (key, value) => {
     let newValue = value;
@@ -248,8 +249,8 @@ export default function Signup() {
             <View style={styles.card}>
               {/* HEADER */}
               <View style={styles.header}>
-                <Text style={styles.title}>Crime Report🧾</Text>
-                <Text style={styles.subtitle}>Share your favorite reads</Text>
+                <Text style={styles.title}>Create Your Account</Text>
+                <Text style={styles.subtitle}>Join SCRP to report and track crime safely</Text>
               </View>
 
               <View style={styles.formContainer}>
@@ -356,13 +357,23 @@ export default function Signup() {
                       style={styles.inputIcon}
                     />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { flex: 1 }]}
                       placeholder="Enter Your Password"
                       placeholderTextColor={COLORS.placeholderText}
-                      secureTextEntry
+                      secureTextEntry={!showPassword}
                       value={formData.password}
                       onChangeText={(value) => handleChange("password", value)}
                     />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={{ padding: 5 }}
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye-outline" : "eye-off-outline"}
+                        size={20}
+                        color={COLORS.primary}
+                      />
+                    </TouchableOpacity>
                   </View>
                 </View>
 
@@ -399,20 +410,19 @@ export default function Signup() {
                         color={COLORS.primary}
                         style={styles.inputIcon}
                       />
-                      <Text
-                        style={[
-                          styles.input,
-                          {
+                      <View style={styles.input}>
+                        <Text
+                          style={{
                             color: formData.date_of_birth
-                              ? "#000"
+                              ? COLORS.textDark
                               : COLORS.placeholderText,
-                          },
-                        ]}
-                      >
-                        {formData.date_of_birth
-                          ? formData.date_of_birth
-                          : "Enter Your Date of Birth"}
-                      </Text>
+                          }}
+                        >
+                          {formData.date_of_birth
+                            ? formData.date_of_birth
+                            : "Enter Your Date of Birth"}
+                        </Text>
+                      </View>
                     </View>
                   </TouchableOpacity>
 
@@ -439,16 +449,14 @@ export default function Signup() {
                 {/* Gender */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Gender</Text>
-                  <View
-                    style={[styles.inputContainer, { paddingHorizontal: 0 }]}
-                  >
+                  <View style={styles.inputContainer}>
                     <Ionicons
                       name="male-female-outline"
                       size={20}
                       color={COLORS.primary}
                       style={styles.inputIcon}
                     />
-                    <View style={{ flex: 1 }}>
+                    <View style={{ flex: 1, marginLeft: -10 }}>
                       <Picker
                         selectedValue={formData.gender}
                         onValueChange={(value) => handleChange("gender", value)}

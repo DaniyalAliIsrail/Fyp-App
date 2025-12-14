@@ -206,6 +206,11 @@ const userSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
+
+        // Debug: Log the full response
+        console.log("=== LOGIN FULFILLED - Full Payload ===");
+        console.log(JSON.stringify(action.payload, null, 2));
+
         // Extract user data from response - try multiple possible paths
         const userData = action.payload.user?.data?.loginUser ||
                         action.payload.user?.loginUser ||

@@ -9,4 +9,7 @@ export const auth = {
     verifyOTP: (data) => axios.post("user/verify-otp", data),
     resendOTP: (data) => axios.post("user/resend-otp", data),
     resetPassword: (data) => axios.put("user/reset-password", data),
+    forgetPassword: (data) => axios.post("user/forget-password", data),
+    verifyForgetPasswordOTP: (data) => axios.post("user/verify-forget-password-otp", data),
+    resetPasswordWithToken: (data) => axios.post("user/reset-password-with-token", data),
 }

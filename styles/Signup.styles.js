@@ -27,24 +27,29 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "700",
-    fontFamily: "JetBrainsMono-Medium",
     color: COLORS.primary,
     marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
     textAlign: "center",
   },
-  formContainer: { marginBottom: 16 },
-  inputGroup: { marginBottom: 20 },
+  subtitle: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  formContainer: {
+    marginBottom: 16,
+  },
+  inputGroup: {
+    marginBottom: 18,
+  },
   label: {
     fontSize: 14,
     marginBottom: 8,
     color: COLORS.textPrimary,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   inputContainer: {
     flexDirection: "row",
@@ -60,6 +65,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     color: COLORS.textDark,
+    justifyContent: "center",
   },
   eyeIcon: { padding: 8 },
   button: {
@@ -119,6 +125,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     textAlign: "center",
+  },
+  picker: {
+    height: 51,
+    color: COLORS.textDark,
+    marginVertical: 0,
   },
 });
 

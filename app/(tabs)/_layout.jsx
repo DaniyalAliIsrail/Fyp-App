@@ -1,8 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { useSelector } from "react-redux";
 import COLORS from "../../constants/colors";
 
 export default function TabsLayout() {
+  const { currentUser } = useSelector((state) => state.auth);
+
   return (
     <Tabs
       screenOptions={{
@@ -41,6 +44,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="log-in-outline" size={size} color={color} />
           ),
+          href: currentUser ? null : undefined,
         }}
       />
 
@@ -51,6 +55,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-add-outline" size={size} color={color} />
           ),
+          href: currentUser ? null : undefined,
         }}
       />
 
@@ -64,14 +69,22 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          href: null,
+          title: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
+          href: currentUser ? undefined : null,
         }}
       />
 
       <Tabs.Screen
         name="report-crime"
         options={{
-          href: null,
+          title: "Report Crime",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="document-text-outline" size={size} color={color} />
+          ),
+          href: currentUser ? undefined : null,
         }}
       />
     </Tabs>

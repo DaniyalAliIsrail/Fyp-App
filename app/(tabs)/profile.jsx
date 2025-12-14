@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ScrollView } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -41,64 +41,72 @@ export default function Profile() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
-      </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Profile</Text>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => router.push("/edit-profile")}
+          >
+            <Ionicons name="create-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
 
-      {/* Profile Info */}
-      <View style={styles.profileSection}>
-        <View style={styles.profileImageContainer}>
-          {currentUser?.profile_image ? (
-            <Image
-              source={{ uri: currentUser.profile_image }}
-              style={styles.profileImage}
-            />
-          ) : (
-            <View style={styles.profileImagePlaceholder}>
-              <Ionicons name="person" size={60} color="#999" />
+        {/* Profile Info */}
+        <View style={styles.profileSection}>
+          <View style={styles.profileImageContainer}>
+            {currentUser?.profile_image ? (
+              <Image
+                source={{ uri: currentUser.profile_image }}
+                style={styles.profileImage}
+              />
+            ) : (
+              <View style={styles.profileImagePlaceholder}>
+                <Ionicons name="person" size={60} color="#999" />
+              </View>
+            )}
+          </View>
+
+          <Text style={styles.userName}>
+            {currentUser.firstname} {currentUser.lastname}
+          </Text>
+          <Text style={styles.userEmail}>{currentUser.email}</Text>
+        </View>
+
+        {/* User Details */}
+        <View style={styles.detailsSection}>
+          <View style={styles.detailItem}>
+            <Ionicons name="card-outline" size={24} color={COLORS.primary} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.detailLabel}>CNIC</Text>
+              <Text style={styles.detailValue}>{currentUser.cnic_no}</Text>
             </View>
-          )}
-        </View>
+          </View>
 
-        <Text style={styles.userName}>
-          {currentUser.firstname} {currentUser.lastname}
-        </Text>
-        <Text style={styles.userEmail}>{currentUser.email}</Text>
-      </View>
+          <View style={styles.detailItem}>
+            <Ionicons name="call-outline" size={24} color={COLORS.primary} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.detailLabel}>Phone</Text>
+              <Text style={styles.detailValue}>{currentUser.phone || currentUser.phone_no || "Not provided"}</Text>
+            </View>
+          </View>
 
-      {/* User Details */}
-      <View style={styles.detailsSection}>
-        <View style={styles.detailItem}>
-          <Ionicons name="card-outline" size={24} color={COLORS.primary} />
-          <View style={styles.detailTextContainer}>
-            <Text style={styles.detailLabel}>CNIC</Text>
-            <Text style={styles.detailValue}>{currentUser.cnic_no}</Text>
+          <View style={styles.detailItem}>
+            <Ionicons name="mail-outline" size={24} color={COLORS.primary} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.detailLabel}>Email</Text>
+              <Text style={styles.detailValue}>{currentUser.email}</Text>
+            </View>
           </View>
         </View>
 
-        <View style={styles.detailItem}>
-          <Ionicons name="call-outline" size={24} color={COLORS.primary} />
-          <View style={styles.detailTextContainer}>
-            <Text style={styles.detailLabel}>Phone</Text>
-            <Text style={styles.detailValue}>{currentUser.phone_no}</Text>
-          </View>
-        </View>
-
-        <View style={styles.detailItem}>
-          <Ionicons name="mail-outline" size={24} color={COLORS.primary} />
-          <View style={styles.detailTextContainer}>
-            <Text style={styles.detailLabel}>Email</Text>
-            <Text style={styles.detailValue}>{currentUser.email}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={24} color="#fff" />
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={24} color="#fff" />
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
@@ -108,12 +116,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f5f5f5",
   },
+  scrollContent: {
+    paddingBottom: 40,
+  },
   header: {
     backgroundColor: COLORS.primary || "#2b303a",
     paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 20,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+  },
+  editButton: {
+    padding: 8,
   },
   headerTitle: {
     fontSize: 24,

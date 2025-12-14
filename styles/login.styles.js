@@ -86,6 +86,15 @@ const styles = StyleSheet.create({
   eyeIcon: {
     padding: 8,
   },
+  forgotPasswordContainer: {
+    alignItems: "flex-end",
+    marginTop: 8,
+  },
+  forgotPasswordText: {
+    color: COLORS.primary,
+    fontSize: 14,
+    fontWeight: "600",
+  },
   button: {
     backgroundColor: COLORS.primary,
     borderRadius: 12,
