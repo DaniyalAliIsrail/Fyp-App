@@ -112,24 +112,18 @@ export default function Home() {
       {/* CTA for non-logged in users */}
       {!currentUser && (
         <View style={styles.ctaSection}>
-          <Text style={styles.ctaTitle}>Ready to make a difference?</Text>
+          <Ionicons name="lock-closed" size={48} color={COLORS.primary} style={styles.ctaIcon} />
+          <Text style={styles.ctaTitle}>Secure Your Community</Text>
           <Text style={styles.ctaDescription}>
-            Join thousands of citizens helping to keep our community safe
+            Login to report crimes securely and help keep our community safe. All reports are encrypted and protected.
           </Text>
-          <View style={styles.ctaButtons}>
-            <TouchableOpacity
-              style={styles.ctaButtonPrimary}
-              onPress={() => router.push("/(tabs)/signup")}
-            >
-              <Text style={styles.ctaButtonPrimaryText}>Sign Up</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.ctaButtonSecondary}
-              onPress={() => router.push("/(tabs)/login")}
-            >
-              <Text style={styles.ctaButtonSecondaryText}>Login</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.ctaButtonFullWidth}
+            onPress={() => router.push("/(tabs)/login")}
+          >
+            <Ionicons name="log-in-outline" size={20} color={COLORS.white} />
+            <Text style={styles.ctaButtonFullWidthText}>Login to Continue</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -346,6 +340,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
+  ctaIcon: {
+    marginBottom: 16,
+  },
   ctaTitle: {
     fontSize: 22,
     fontWeight: "bold",
@@ -357,44 +354,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 24,
     lineHeight: 20,
+    paddingHorizontal: 10,
   },
-  ctaButtons: {
-    flexDirection: "row",
-    gap: 12,
-    width: "100%",
-  },
-  ctaButtonPrimary: {
-    flex: 1,
+  ctaButtonFullWidth: {
     backgroundColor: COLORS.primary,
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    width: "100%",
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 6,
+    elevation: 5,
   },
-  ctaButtonPrimaryText: {
+  ctaButtonFullWidthText: {
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.white,
-  },
-  ctaButtonSecondary: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-  },
-  ctaButtonSecondaryText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: COLORS.primary,
   },
   bottomSpacer: {
     height: 120,

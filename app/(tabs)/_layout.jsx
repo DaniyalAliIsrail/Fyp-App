@@ -27,6 +27,7 @@ export default function TabsLayout() {
         },
       }}
     >
+      {/* Home - Always visible */}
       <Tabs.Screen
         name="index"
         options={{
@@ -37,52 +38,47 @@ export default function TabsLayout() {
         }}
       />
 
+      {/* Login and Signup - Hidden from tabs, accessible via router.push() */}
       <Tabs.Screen
         name="login"
         options={{
-          title: "Login",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="log-in-outline" size={size} color={color} />
-          ),
-          href: currentUser ? null : undefined,
+          href: null, // Remove from tab bar completely
         }}
       />
 
       <Tabs.Screen
         name="signup"
         options={{
-          title: "Sign Up",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-add-outline" size={size} color={color} />
-          ),
-          href: currentUser ? null : undefined,
+          href: null, // Remove from tab bar completely
         }}
       />
 
       <Tabs.Screen
         name="verify-otp"
         options={{
-          href: null,
+          href: null, // Hidden screen
         }}
       />
 
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
-          href: currentUser ? undefined : null,
-        }}
-      />
-
+      {/* Report Crime - Only visible when logged in */}
       <Tabs.Screen
         name="report-crime"
         options={{
           title: "Report Crime",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text-outline" size={size} color={color} />
+          ),
+          href: currentUser ? undefined : null,
+        }}
+      />
+
+      {/* Profile - Only visible when logged in */}
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
           href: currentUser ? undefined : null,
         }}
