@@ -11,6 +11,10 @@ const COLORS = {
     border: "#bbdefb",
     white: "#ffffff",
     black: "#000000",
+    gray: "#808080",
+    lightGray: "#f5f5f5",
+    danger: "#d32f2f",
+    success: "#4CAF50",
 };
 
 export default COLORS;

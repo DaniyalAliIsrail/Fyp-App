@@ -37,15 +37,21 @@ export default function Home() {
         <View style={styles.menuContainer}>
           <Text style={styles.menuTitle}>Quick Actions</Text>
 
-          <TouchableOpacity style={styles.menuItem}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => router.push("/(tabs)/report-crime")}
+          >
             <Ionicons name="document-text-outline" size={24} color="#2b303a" />
             <Text style={styles.menuItemText}>File a Report</Text>
             <Ionicons name="chevron-forward-outline" size={24} color="#999" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push("/(tabs)/reports")}>
-            <Ionicons name="list-outline" size={24} color="#2b303a" />
-            <Text style={styles.menuItemText}>My Reports</Text>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => router.push("/(tabs)/profile")}
+          >
+            <Ionicons name="person-outline" size={24} color="#2b303a" />
+            <Text style={styles.menuItemText}>My Profile</Text>
             <Ionicons name="chevron-forward-outline" size={24} color="#999" />
           </TouchableOpacity>
         </View>

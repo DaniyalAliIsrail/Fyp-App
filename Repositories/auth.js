@@ -8,4 +8,5 @@ export const auth = {
     login: (data) => axios.post("user/login", data),
     verifyOTP: (data) => axios.post("user/verify-otp", data),
     resendOTP: (data) => axios.post("user/resend-otp", data),
+    resetPassword: (data) => axios.put("user/reset-password", data),
 }

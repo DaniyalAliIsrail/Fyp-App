@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const initialState = {
   currentUser: null,
+  token: null,
   error: null,
   loading: false,
 };
@@ -22,7 +23,10 @@ export const signUpUser = createAsyncThunk(
         await AsyncStorage.setItem("token", response.data.token);
       }
 
-      return response.data;
+      return {
+        user: response.data,
+        token: response.data.token,
+      };
     } catch (error) {
       // Log full error for debugging
       console.log("=== AUTH SLICE: API Error ===");
@@ -54,7 +58,10 @@ export const loginUser = createAsyncThunk(
         await AsyncStorage.setItem("token", response.data.token);
       }
 
-      return response.data;
+      return {
+        user: response.data,
+        token: response.data.token,
+      };
     } catch (error) {
       console.log("=== AUTH SLICE: Login Error ===");
       console.log("Error message:", error.message);
@@ -136,6 +143,19 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+// Async thunk to restore auth state from AsyncStorage on app startup
+export const restoreAuthState = createAsyncThunk(
+  "user/restoreAuthState",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      return { token };
+    } catch (error) {
+      return rejectWithValue("Failed to restore auth state");
+    }
+  }
+);
+
 const userSlice = createSlice({
   name: "auth",
   initialState,
@@ -156,6 +176,7 @@ const userSlice = createSlice({
   
     signOutSuccess:(state)=>{
       state.currentUser = null;
+      state.token = null;
       state.loading = false;
       state.error = null;
     }
@@ -167,10 +188,11 @@ const userSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(signUpUser.fulfilled, (state) => {
+      .addCase(signUpUser.fulfilled, (state, action) => {
         state.loading = false;
         // Don't set currentUser on signup - user needs to verify OTP first
         state.currentUser = null;
+        state.token = action.payload.token || null;
         state.error = null;
       })
       .addCase(signUpUser.rejected, (state, action) => {
@@ -185,12 +207,14 @@ const userSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         // Extract user data from response - try multiple possible paths
-        state.currentUser = action.payload.data?.loginUser ||
-                           action.payload.loginUser ||
-                           action.payload.data?.user ||
-                           action.payload.user ||
-                           action.payload.data ||
-                           action.payload;
+        const userData = action.payload.user?.data?.loginUser ||
+                        action.payload.user?.loginUser ||
+                        action.payload.user?.data?.user ||
+                        action.payload.user?.user ||
+                        action.payload.user?.data ||
+                        action.payload.user;
+        state.currentUser = userData;
+        state.token = action.payload.token || null;
         state.error = null;
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -232,11 +256,16 @@ const userSlice = createSlice({
       .addCase(logoutUser.fulfilled, (state) => {
         state.loading = false;
         state.currentUser = null;
+        state.token = null;
         state.error = null;
       })
       .addCase(logoutUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Restore auth state reducers
+      .addCase(restoreAuthState.fulfilled, (state, action) => {
+        state.token = action.payload.token || null;
       });
   },
 });
