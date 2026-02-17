@@ -1,12 +1,53 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { useSelector } from "react-redux";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../../constants/colors";
+import * as Location from "expo-location";
+import { Alert } from "react-native";
+import { locationApi } from "../../Repositories/location";
 
 export default function Home() {
   const { currentUser } = useSelector((state) => state.auth);
   const router = useRouter();
+
+  const shareMyLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Location permission is required to share coordinates."
+        );
+        return;
+      }
+
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const latitude = loc.coords.latitude;
+      const longitude = loc.coords.longitude;
+
+      await locationApi.shareLocation({ latitude, longitude });
+
+      Alert.alert("Success", "Location shared successfully!");
+    } catch (err) {
+      Alert.alert(
+        "Error",
+        err?.response?.data?.message ||
+          err.message ||
+          "Failed to share location"
+      );
+    }
+  };
 
   const features = [
     {
@@ -34,6 +75,16 @@ export default function Home() {
       {/* Hero Section */}
       <View style={styles.heroSection}>
         <View style={styles.heroContent}>
+          {/* Bell Icon Top Right */}
+          {currentUser && (
+            <TouchableOpacity onPress={shareMyLocation} style={styles.bellIcon}>
+              <Ionicons
+                name="notifications-outline"
+                size={24}
+                color={COLORS.white}
+              />
+            </TouchableOpacity>
+          )}
           <Ionicons name="shield-checkmark" size={80} color={COLORS.white} />
           <Text style={styles.heroTitle}>
             {currentUser ? `Welcome back, ${currentUser.firstname}!` : "SCRP"}
@@ -64,12 +115,19 @@ export default function Home() {
         <Text style={styles.sectionTitle}>Why Use SCRP?</Text>
         {features.map((feature, index) => (
           <View key={index} style={styles.featureCard}>
-            <View style={[styles.featureIconContainer, { backgroundColor: feature.color + "15" }]}>
+            <View
+              style={[
+                styles.featureIconContainer,
+                { backgroundColor: feature.color + "15" },
+              ]}
+            >
               <Ionicons name={feature.icon} size={32} color={feature.color} />
             </View>
             <View style={styles.featureTextContainer}>
               <Text style={styles.featureTitle}>{feature.title}</Text>
-              <Text style={styles.featureDescription}>{feature.description}</Text>
+              <Text style={styles.featureDescription}>
+                {feature.description}
+              </Text>
             </View>
           </View>
         ))}
@@ -112,10 +170,16 @@ export default function Home() {
       {/* CTA for non-logged in users */}
       {!currentUser && (
         <View style={styles.ctaSection}>
-          <Ionicons name="lock-closed" size={48} color={COLORS.primary} style={styles.ctaIcon} />
+          <Ionicons
+            name="lock-closed"
+            size={48}
+            color={COLORS.primary}
+            style={styles.ctaIcon}
+          />
           <Text style={styles.ctaTitle}>Secure Your Community</Text>
           <Text style={styles.ctaDescription}>
-            Login to report crimes securely and help keep our community safe. All reports are encrypted and protected.
+            Login to report crimes securely and help keep our community safe.
+            All reports are encrypted and protected.
           </Text>
           <TouchableOpacity
             style={styles.ctaButtonFullWidth}
@@ -167,6 +231,12 @@ const styles = StyleSheet.create({
     marginTop: -20,
     marginBottom: 20,
   },
+  bellIcon: {
+    position: "absolute",
+    top: -30,
+    right: 0,
+    padding: 8,
+  },
   primaryActionButton: {
     backgroundColor: "#E53935",
     borderRadius: 16,
@@ -182,7 +252,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 24,
     gap: 12,
-    marginTop:42,
+    marginTop: 42,
   },
   primaryActionText: {
     fontSize: 18,

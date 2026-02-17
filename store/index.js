@@ -1,10 +1,7 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
-// import { persistStore, persistReducer } from "redux-persist";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
+import { persistStore, persistReducer, createTransform } from "redux-persist";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
-import { persistStore, persistReducer } from 'redux-persist';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // RN me storage
 import authReducer from "./slices/auth.slice";
 import reportReducer from "./slices/report.slice";
 
@@ -14,11 +11,42 @@ const rootReducer = combineReducers({
   report: reportReducer,
 });
 
+/*
+  Transform to persist ONLY:
+  - currentUser
+  - token
+
+  And reset:
+  - loading
+  - error
+*/
+const authTransform = createTransform(
+  // Before saving to storage
+  (inboundState) => {
+    return {
+      currentUser: inboundState.currentUser,
+      token: inboundState.token,
+    };
+  },
+
+  // When rehydrating from storage
+  (outboundState) => {
+    return {
+      ...outboundState,
+      loading: false,
+      error: null,
+    };
+  },
+
+  { whitelist: ["auth"] }
+);
+
 // Persist config
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
-  whitelist: ["auth"], // Only auth slice will be persisted
+  whitelist: ["auth"],
+  transforms: [authTransform],
 };
 
 // Persisted reducer
@@ -33,4 +61,5 @@ export const store = configureStore({
     }),
 });
 
+// Persistor
 export const persistor = persistStore(store);

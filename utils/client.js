@@ -5,7 +5,7 @@ const client = axios.create({
   // Replace with your computer's IP address for Expo Go testing
   // Find it with: ipconfig (Windows) or ifconfig (Mac/Linux)
   // Current IP: 192.168.6.106 (from ipconfig Ethernet)
-  baseURL: "http://192.168.6.106:3004/api/v1/",
+  baseURL: "http://192.168.7.106:3004/api/v1/",
   timeout: 90000, // 90 seconds for file uploads to Cloudinary
 });
 

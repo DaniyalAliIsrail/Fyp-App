@@ -16,6 +16,7 @@ import { useState, useEffect } from "react";
 import { Link, useRouter } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../store/slices/auth.slice";
+import { ScrollView } from "react-native";
 
 export default function Login() {
   const dispatch = useDispatch();
@@ -79,6 +80,7 @@ export default function Login() {
      style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <ScrollView contentContainerStyle={{flexGrow:1}} keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
         <View style={styles.topIllustration}>
           <Image
@@ -173,6 +175,7 @@ export default function Login() {
           </View>
         </View>
       </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
